@@ -1,30 +1,50 @@
 import 'reflect-metadata';
-import { MikroORM } from '@mikro-orm/core';
-import { __prod__ } from './constants';
-import microConfig from './mikro-orm.config';
-import express from 'express';
+import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import { ApolloServer } from 'apollo-server-express';
+import connectRedis from 'connect-redis';
+import cors from 'cors';
+import express from 'express';
+import session from 'express-session';
+import Redis from 'ioredis';
 import { buildSchema } from 'type-graphql';
+import { COOKIE_NAME, __prod__ } from './constants';
 import { PostResolver } from './resolvers/posts';
 import { UserResolver } from './resolvers/user';
-import * as redis from 'redis';
-import session from 'express-session';
-import connectRedis from 'connect-redis';
+import { DataSource } from 'typeorm';
+import { Post } from './entities/Post';
+import { User } from './entities/User';
 
 const main = async () => {
-  const orm = await MikroORM.init(microConfig);
-  await orm.getMigrator().up();
+  const dataSource = new DataSource({
+    type: 'postgres',
+    database: 'lireddit2',
+    username: 'lireddit2',
+    password: 'postgres',
+    logging: false,
+    synchronize: true,
+    entities: [Post, User],
+  });
+
+  await dataSource.initialize();
 
   const app = express();
 
-  const RedisStore = connectRedis(session);
-  const redisClient = redis.createClient();
-  await redisClient.connect();
+  let RedisStore = connectRedis(session);
+  let redis = new Redis();
+
+  //applies cors is all routes
+  app.use(
+    cors({
+      origin: 'http://localhost:3000',
+      credentials: true,
+    })
+  );
 
   app.use(
     session({
+      name: COOKIE_NAME,
       store: new RedisStore({
-        client: redisClient,
+        client: redis,
         disableTouch: true,
       }),
       cookie: {
@@ -44,12 +64,21 @@ const main = async () => {
       resolvers: [PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }) => ({ em: orm.em, req, res }),
+    plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
+    context: ({ req, res }) => ({ req, res, redis }),
   });
 
   await apolloServer.start();
 
-  apolloServer.applyMiddleware({ app });
+  apolloServer.applyMiddleware({
+    app,
+    //cors: { origin: 'http://localhost:3000' }, //do this to only use it in apollo but we are going to set is globally
+    cors: false,
+  });
+
+  app.get('/', (_, res) => {
+    res.send('Hello');
+  });
 
   app.listen(5000, () => {
     console.log('Server started at port localhost:5000');

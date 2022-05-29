@@ -1,8 +1,7 @@
-mutation Login($username: String!, $password: String!) {
-  login(options: { username: $username, password: $password }) {
+mutation Login($options: LoginInput!) {
+  login(options: $options) {
     errors {
-      field
-      message
+      ...RegularError
     }
     user {
       # Using fragments
