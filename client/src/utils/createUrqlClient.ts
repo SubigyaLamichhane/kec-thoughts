@@ -1,5 +1,4 @@
-import { cacheExchange, Resolver } from '@urql/exchange-graphcache';
-import { stringify } from 'querystring';
+import { cacheExchange, Resolver, Cache } from '@urql/exchange-graphcache';
 import { dedupExchange, fetchExchange } from 'urql';
 import {
   LogoutMutation,
@@ -7,6 +6,9 @@ import {
   MeDocument,
   LoginMutation,
   RegisterMutation,
+  CreatePostMutation,
+  PostsQuery,
+  PostsDocument,
 } from '../generated/graphql';
 import { betterUpdateQuery } from './betterUpdateQuery';
 
@@ -47,6 +49,14 @@ const cursorPagination = (): Resolver => {
   };
 };
 
+// function invalidateAllPosts(cache: Cache) {
+//   const allFields = cache.inspectFields('Query');
+//   const fieldInfos = allFields.filter((info) => info.fieldName === 'posts');
+//   fieldInfos.forEach((fi) => {
+//     cache.invalidate('Query', 'posts', fi.arguments || {});
+//   });
+// }
+
 export const createUrqlClient = (ssrExchange: any) => ({
   url: 'http://localhost:5000/graphql',
   fetchOptions: {
@@ -65,6 +75,9 @@ export const createUrqlClient = (ssrExchange: any) => ({
       },
       updates: {
         Mutation: {
+          createPost: (result, args, cache, info) => {
+            cache.updateQuery;
+          },
           logout: (result, args, cache, info) => {
             cache.updateQuery;
             betterUpdateQuery<LogoutMutation, MeQuery>(
@@ -83,6 +96,8 @@ export const createUrqlClient = (ssrExchange: any) => ({
               { query: MeDocument },
               result,
               (result, query) => {
+                console.log('result', result);
+                console.log('query', query);
                 if (result.login.errors) {
                   return query;
                 } else {

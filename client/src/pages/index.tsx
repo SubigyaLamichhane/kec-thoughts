@@ -29,8 +29,6 @@ const Index: React.FC<IndexProps> = ({}) => {
     },
   });
 
-  console.log(data);
-
   if (!fetching && !data) {
     return <div>There are no posts.</div>;
   }

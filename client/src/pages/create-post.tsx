@@ -20,7 +20,7 @@ const CreatePost: React.FC<CreatePostProps> = ({}) => {
         initialValues={{ title: '', text: '' }}
         onSubmit={async (values, { setErrors }) => {
           const response = await createPost({ input: values });
-          if (response.data?.createPost.title) {
+          if (response.data?.createPost) {
             router.push('/');
           }
         }}

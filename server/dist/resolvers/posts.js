@@ -71,7 +71,8 @@ let PostResolver = class PostResolver {
         return Post_1.Post.findOne({ where: { id } });
     }
     async createPost(input, { req }) {
-        return await Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId })).save();
+        const post = await Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId })).save();
+        return post;
     }
     async updatePost(id, title) {
         const post = await Post_1.Post.findOne({ where: { id } });

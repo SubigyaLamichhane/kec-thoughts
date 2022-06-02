@@ -73,6 +73,7 @@ export class PostResolver {
     // `,
     //   replacements
     // );
+
     const post = dataSource
       .getRepository(Post)
       .createQueryBuilder('p')
@@ -106,10 +107,12 @@ export class PostResolver {
     @Arg('input') input: PostInput,
     @Ctx() { req }: MyContext
   ): Promise<Post> {
-    return await Post.create({
+    const post = await Post.create({
       ...input,
       creatorId: req.session.userId,
     }).save();
+
+    return post;
   }
 
   @Mutation(() => Post, { nullable: true })

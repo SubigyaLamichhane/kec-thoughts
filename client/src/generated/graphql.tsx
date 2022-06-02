@@ -159,7 +159,7 @@ export type CreatePostMutationVariables = Exact<{
 }>;
 
 
-export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'Post', title: string, id: number, createdAt: string, updatedAt: string } };
+export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'Post', title: string, id: number, textSnippet: string, createdAt: string, updatedAt: string } };
 
 export type ForgotPasswordMutationVariables = Exact<{
   email: Scalars['String'];
@@ -234,6 +234,7 @@ export const CreatePostDocument = gql`
   createPost(input: $input) {
     title
     id
+    textSnippet
     createdAt
     updatedAt
   }
