@@ -75,6 +75,12 @@ ForgotResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], ForgotResponse);
 let UserResolver = class UserResolver {
+    email(user, { req }) {
+        if (req.session.userId === user.id) {
+            return user.email;
+        }
+        return '';
+    }
     async changePassword(token, newPassword, { redis, req }) {
         if (newPassword.length <= 3) {
             return {
@@ -153,7 +159,6 @@ let UserResolver = class UserResolver {
         }
         catch (err) {
             if (err.detail.includes('already exists')) {
-                console.log(err);
                 if (err.detail.includes('(email)=')) {
                     return {
                         errors: [
@@ -191,6 +196,17 @@ let UserResolver = class UserResolver {
             user,
         };
     }
+    async logout({ req, res }) {
+        return new Promise((resolve) => req.session.destroy((err) => {
+            res.clearCookie(constants_1.COOKIE_NAME);
+            if (err) {
+                console.log(err);
+                resolve(false);
+                return;
+            }
+            resolve(true);
+        }));
+    }
     async login(options, { req }) {
         const user = await User_1.User.findOne({
             where: validator_1.default.isEmail(options.usernameOrEmail)
@@ -224,18 +240,15 @@ let UserResolver = class UserResolver {
             user,
         };
     }
-    async logout({ req, res }) {
-        return new Promise((resolve) => req.session.destroy((err) => {
-            res.clearCookie(constants_1.COOKIE_NAME);
-            if (err) {
-                console.log(err);
-                resolve(false);
-                return;
-            }
-            resolve(true);
-        }));
-    }
 };
+__decorate([
+    (0, type_graphql_1.FieldResolver)(() => String),
+    __param(0, (0, type_graphql_1.Root)()),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [User_1.User, Object]),
+    __metadata("design:returntype", void 0)
+], UserResolver.prototype, "email", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => UserResponse),
     __param(0, (0, type_graphql_1.Arg)('token')),
@@ -269,6 +282,13 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "register", null);
 __decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    __param(0, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "logout", null);
+__decorate([
     (0, type_graphql_1.Mutation)(() => UserResponse),
     __param(0, (0, type_graphql_1.Arg)('options')),
     __param(1, (0, type_graphql_1.Ctx)()),
@@ -276,15 +296,8 @@ __decorate([
     __metadata("design:paramtypes", [LoginInput, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "login", null);
-__decorate([
-    (0, type_graphql_1.Mutation)(() => Boolean),
-    __param(0, (0, type_graphql_1.Ctx)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], UserResolver.prototype, "logout", null);
 UserResolver = __decorate([
-    (0, type_graphql_1.Resolver)()
+    (0, type_graphql_1.Resolver)(User_1.User)
 ], UserResolver);
 exports.UserResolver = UserResolver;
 //# sourceMappingURL=user.js.map

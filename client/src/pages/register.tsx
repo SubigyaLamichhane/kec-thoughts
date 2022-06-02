@@ -42,12 +42,14 @@ const Register: React.FC<registerProps> = ({}) => {
               placeholder="example@example.com"
               label="Email"
               type="email"
+              textarea={false}
             />
             <Box mt={8}>
               <InputField
                 name="username"
                 placeholder="username"
                 label="Username"
+                textarea={false}
               />
             </Box>
             <Box mt={8}>
@@ -56,6 +58,7 @@ const Register: React.FC<registerProps> = ({}) => {
                 placeholder="password"
                 label="Password"
                 type="password"
+                textarea={false}
               />
             </Box>
             <Box mt={8}>

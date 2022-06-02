@@ -21,10 +21,10 @@ const Login: React.FC<LoginProps> = ({}) => {
       <Formik
         initialValues={{ usernameOrEmail: '', password: '' }}
         onSubmit={async (values, { setErrors }) => {
-          const response = await login({ options: values });
-          if (response.data?.login.errors) {
-            setErrors(toErrorMap(response.data.login.errors));
-          } else if (response.data?.login.user) {
+          const { error } = await login({ options: values });
+          if (error?.message.includes('not authenticated')) {
+            router.push('/login');
+          } else {
             //worked
             router.push('/');
           }
@@ -36,6 +36,7 @@ const Login: React.FC<LoginProps> = ({}) => {
               name="usernameOrEmail"
               placeholder="username or email"
               label="Username or Email"
+              textarea={false}
             />
             <Box mt={8}>
               <InputField
@@ -43,6 +44,7 @@ const Login: React.FC<LoginProps> = ({}) => {
                 placeholder="password"
                 label="Password"
                 type="password"
+                textarea={false}
               />
             </Box>
             <Box mt={8}>

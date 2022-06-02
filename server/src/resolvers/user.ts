@@ -4,11 +4,13 @@ import {
   Arg,
   Ctx,
   Field,
+  FieldResolver,
   InputType,
   Mutation,
   ObjectType,
   Query,
   Resolver,
+  Root,
 } from 'type-graphql';
 import { v4 } from 'uuid';
 import validator from 'validator';
@@ -50,8 +52,18 @@ class ForgotResponse {
   searched: Boolean;
 }
 
-@Resolver()
+@Resolver(User)
 export class UserResolver {
+  @FieldResolver(() => String)
+  email(@Root() user: User, @Ctx() { req }: MyContext) {
+    if (req.session.userId === user.id) {
+      // this is the current user
+      return user.email;
+    }
+    // the current user is trying to see someone elses email
+    return '';
+  }
+
   @Mutation(() => UserResponse)
   async changePassword(
     @Arg('token') token: string,
@@ -189,7 +201,6 @@ export class UserResolver {
       }).save();
     } catch (err) {
       if (err.detail.includes('already exists')) {
-        console.log(err);
         if (err.detail.includes('(email)=')) {
           return {
             errors: [
@@ -231,6 +242,21 @@ export class UserResolver {
     };
   }
 
+  @Mutation(() => Boolean)
+  async logout(@Ctx() { req, res }: MyContext) {
+    return new Promise((resolve) =>
+      req.session.destroy((err) => {
+        res.clearCookie(COOKIE_NAME);
+        if (err) {
+          console.log(err);
+          resolve(false);
+          return;
+        }
+        resolve(true);
+      })
+    );
+  }
+
   @Mutation(() => UserResponse)
   async login(
     @Arg('options') options: LoginInput,
@@ -264,24 +290,8 @@ export class UserResolver {
     }
     // set the userId is the session
     req.session.userId = user.id;
-
     return {
       user,
     };
-  }
-
-  @Mutation(() => Boolean)
-  async logout(@Ctx() { req, res }: MyContext) {
-    return new Promise((resolve) =>
-      req.session.destroy((err) => {
-        res.clearCookie(COOKIE_NAME);
-        if (err) {
-          console.log(err);
-          resolve(false);
-          return;
-        }
-        resolve(true);
-      })
-    );
   }
 }
