@@ -3,17 +3,19 @@ import { Box, Button, Flex, Link } from '@chakra-ui/react';
 import NextLink from 'next/link';
 import { useLogoutMutation, useMeQuery } from '../generated/graphql';
 import { isServer } from '../utils/isServer';
+import { useApolloClient } from '@apollo/client';
 
 interface NavbarProps {}
 
 const Navbar: React.FC<NavbarProps> = ({}) => {
-  const [{ data, fetching }] = useMeQuery({
-    pause: isServer(),
+  const apolloClient = useApolloClient();
+  const { data, loading } = useMeQuery({
+    skip: isServer(),
   });
-  const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
+  const [logout, { loading: logoutLoading }] = useLogoutMutation();
 
   let body = null;
-  if (fetching) {
+  if (loading) {
     // loading
   } else if (!data?.me) {
     // User is not logged in
@@ -41,15 +43,24 @@ const Navbar: React.FC<NavbarProps> = ({}) => {
           </Link>
         </NextLink>
         <Button
+          mr={2}
           color="white"
           variant={'link'}
-          onClick={() => {
-            logout();
+          onClick={async () => {
+            await logout();
+            await apolloClient.resetStore();
           }}
-          isLoading={logoutFetching}
+          isLoading={logoutLoading}
         >
           Logout
         </Button>
+        {data.me.isAdmin && (
+          <NextLink href={'/approve-post'}>
+            <Link mr={2} color="white">
+              Approve Posts
+            </Link>
+          </NextLink>
+        )}
       </Box>
     );
   }
@@ -57,7 +68,7 @@ const Navbar: React.FC<NavbarProps> = ({}) => {
   return (
     <Box bg="grey" p={4}>
       <Flex>
-        Navbar
+        Kec Thoughts
         {body}
       </Flex>
     </Box>

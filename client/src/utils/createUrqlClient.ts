@@ -1,5 +1,5 @@
 import { cacheExchange, Resolver, Cache } from '@urql/exchange-graphcache';
-import { dedupExchange, fetchExchange } from 'urql';
+import { dedupExchange, fetchExchange, gql } from 'urql';
 import {
   LogoutMutation,
   MeQuery,
@@ -9,6 +9,9 @@ import {
   CreatePostMutation,
   PostsQuery,
   PostsDocument,
+  ApprovedPostsDocument,
+  ApprovedPostsQuery,
+  ApprovePostMutation,
 } from '../generated/graphql';
 import { betterUpdateQuery } from './betterUpdateQuery';
 
@@ -75,8 +78,21 @@ export const createUrqlClient = (ssrExchange: any) => ({
       },
       updates: {
         Mutation: {
+          approvePost: (result, args, cache, info) => {
+            cache.updateQuery;
+            cache.updateQuery({ query: ApprovedPostsDocument }, (data) => {
+              // @ts-ignore
+              data.approvedPosts.posts.unshift(result.approvePost);
+              return data;
+            });
+          },
           createPost: (result, args, cache, info) => {
             cache.updateQuery;
+            cache.updateQuery({ query: PostsDocument }, (data) => {
+              // @ts-ignore
+              data.posts.posts.unshift(result.createPost);
+              return data;
+            });
           },
           logout: (result, args, cache, info) => {
             cache.updateQuery;
@@ -90,15 +106,15 @@ export const createUrqlClient = (ssrExchange: any) => ({
             );
           },
           login: (result, args, cache, info) => {
+            console.log('ran');
             cache.updateQuery;
             betterUpdateQuery<LoginMutation, MeQuery>(
               cache,
               { query: MeDocument },
               result,
               (result, query) => {
-                console.log('result', result);
-                console.log('query', query);
                 if (result.login.errors) {
+                  console.log(query);
                   return query;
                 } else {
                   return {

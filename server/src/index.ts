@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+import 'dotenv-safe/config';
 import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import { ApolloServer } from 'apollo-server-express';
 import connectRedis from 'connect-redis';
@@ -5,28 +7,44 @@ import cors from 'cors';
 import express from 'express';
 import session from 'express-session';
 import Redis from 'ioredis';
-import 'reflect-metadata';
+
 import { buildSchema } from 'type-graphql';
 import { COOKIE_NAME, __prod__ } from './constants';
 import { dataSource } from './dataSource';
+import { ApprovedPostResolver } from './resolvers/approvedPosts';
 import { PostResolver } from './resolvers/posts';
 import { UserResolver } from './resolvers/user';
+//import argon2 from 'argon2';
 
 const main = async () => {
   await dataSource.initialize();
-  await dataSource.runMigrations();
+  //await dataSource.runMigrations();
 
   //await Post.delete({});
+
+  // const hashedPassword = await argon2.hash('admin');
+  // await dataSource.query(
+  //   `
+  //   insert into public.user(username, password, email, "isAdmin")
+  //   values ('ADMIN', $1, 'kecthoughts@admin.com', true)
+  //   `,
+  //   [hashedPassword]
+  // );
 
   const app = express();
 
   let RedisStore = connectRedis(session);
-  let redis = new Redis();
+  let redis = new Redis({
+    host: 'redis-12967.c244.us-east-1-2.ec2.cloud.redislabs.com',
+    port: 12967,
+    username: 'default',
+    password: '8BtwGIgWBN1LbhnpEqWT0Q139sOZOp2L',
+  });
 
   //applies cors is all routes
   app.use(
     cors({
-      origin: 'http://localhost:3000',
+      origin: 'https://kec-thoughts-frontend.herokuapp.com',
       credentials: true,
     })
   );
@@ -52,7 +70,7 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [PostResolver, UserResolver],
+      resolvers: [PostResolver, UserResolver, ApprovedPostResolver],
       validate: false,
     }),
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
@@ -71,8 +89,9 @@ const main = async () => {
     res.send('Hello');
   });
 
-  app.listen(5000, () => {
-    console.log('Server started at port localhost:5000');
+  const PORT = process.env.PORT;
+  app.listen(PORT, () => {
+    console.log(`Server started at port ${PORT}`);
   });
   // const post = orm.em.create(Post, {
   //   title: 'my first post',
@@ -81,3 +100,6 @@ const main = async () => {
 };
 
 main();
+
+// 8.A5MY.Z7tZhLpX
+// S4sj3fshp1h6nkdin6qclz6ta3iwf180gvg88my3on0rhjr1aon

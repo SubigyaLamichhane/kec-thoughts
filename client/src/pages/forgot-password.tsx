@@ -1,19 +1,17 @@
 import { Box, Button } from '@chakra-ui/react';
 import { Form, Formik } from 'formik';
-import { isConstValueNode } from 'graphql';
-import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import InputField from '../components/InputField';
 import Wrapper from '../components/Wrapper';
 import { useForgotPasswordMutation } from '../generated/graphql';
-import { createUrqlClient } from '../utils/createUrqlClient';
+import { withApollo } from '../utils/withApollo';
 
 interface ForgotPasswordProps {}
 
 const ForgotPassword: React.FC<ForgotPasswordProps> = ({}) => {
   const [complete, setComplete] = useState(false);
-  const [, forgotPassword] = useForgotPasswordMutation();
+  const [forgotPassword] = useForgotPasswordMutation();
   const router = useRouter();
 
   return (
@@ -22,7 +20,9 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({}) => {
         initialValues={{ email: '' }}
         onSubmit={async (values, { setErrors }) => {
           const response = await forgotPassword({
-            email: values.email,
+            variables: {
+              email: values.email,
+            },
           });
           console.log(response);
           setComplete(true);
@@ -39,6 +39,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({}) => {
                   placeholder="your email"
                   label="Email"
                   type="email"
+                  textarea={false}
                 />
               </Box>
               <Box mt={8}>
@@ -54,4 +55,4 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient, { ssr: true })(ForgotPassword);
+export default withApollo({ ssr: false })(ForgotPassword);

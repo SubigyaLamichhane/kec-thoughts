@@ -157,7 +157,12 @@ export class UserResolver {
       return null;
     }
 
-    return await User.findOne({ where: { id: req.session.userId } });
+    const user = await User.findOne({ where: { id: req.session.userId } });
+    if (user?.isAdmin === null) {
+      user.isAdmin = false;
+    }
+
+    return user;
   }
 
   @Mutation(() => UserResponse)
@@ -235,7 +240,9 @@ export class UserResolver {
         ],
       };
     }
-
+    if (user.isAdmin === null) {
+      user.isAdmin = false;
+    }
     req.session.userId = user.id;
     return {
       user,
@@ -290,6 +297,9 @@ export class UserResolver {
     }
     // set the userId is the session
     req.session.userId = user.id;
+    if (user.isAdmin === null) {
+      user.isAdmin = false;
+    }
     return {
       user,
     };

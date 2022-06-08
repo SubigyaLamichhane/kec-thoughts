@@ -38,4 +38,11 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Post, (post) => post.creator)
   posts: Post[];
+
+  @Field(() => Boolean)
+  @Column({ type: 'boolean', nullable: true })
+  isAdmin: Boolean;
+
+  @OneToMany(() => Post, (post) => post.creator)
+  approvedposts: Post[];
 }

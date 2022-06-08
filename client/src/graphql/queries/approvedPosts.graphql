@@ -1,0 +1,12 @@
+query ApprovedPosts($limit: Int!, $cursor: String) {
+  approvedPosts(limit: $limit, cursor: $cursor) {
+    posts {
+      id
+      createdAt
+      updatedAt
+      title
+      textSnippet
+    }
+    hasMore
+  }
+}

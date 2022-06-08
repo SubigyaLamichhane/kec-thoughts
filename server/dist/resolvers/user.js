@@ -141,7 +141,11 @@ let UserResolver = class UserResolver {
         if (!req.session.userId) {
             return null;
         }
-        return await User_1.User.findOne({ where: { id: req.session.userId } });
+        const user = await User_1.User.findOne({ where: { id: req.session.userId } });
+        if ((user === null || user === void 0 ? void 0 : user.isAdmin) === null) {
+            user.isAdmin = false;
+        }
+        return user;
     }
     async register(options, { req }) {
         const hashedPassword = await argon2_1.default.hash(options.password);
@@ -191,6 +195,9 @@ let UserResolver = class UserResolver {
                 ],
             };
         }
+        if (user.isAdmin === null) {
+            user.isAdmin = false;
+        }
         req.session.userId = user.id;
         return {
             user,
@@ -236,6 +243,9 @@ let UserResolver = class UserResolver {
             };
         }
         req.session.userId = user.id;
+        if (user.isAdmin === null) {
+            user.isAdmin = false;
+        }
         return {
             user,
         };

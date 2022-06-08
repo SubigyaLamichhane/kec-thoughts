@@ -1,35 +1,34 @@
 import {
   Box,
-  Heading,
-  Text,
-  Stack,
-  Flex,
-  Link,
   Button,
+  Flex,
+  Heading,
+  Link,
+  Stack,
+  Text,
 } from '@chakra-ui/react';
-import { withUrqlClient } from 'next-urql';
+import NextLink from 'next/link';
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
-import { usePostsQuery } from '../generated/graphql';
-import { createUrqlClient } from '../utils/createUrqlClient';
-import NextLink from 'next/link';
 import Wrapper from '../components/Wrapper';
+import { useApprovedPostsQuery, useMeQuery } from '../generated/graphql';
+import { isServer } from '../utils/isServer';
+import { withApollo } from '../utils/withApollo';
 
 interface IndexProps {}
 
 const Index: React.FC<IndexProps> = ({}) => {
-  const [variables, setVariables] = useState({
-    limit: 10,
-    cursor: null as null | string,
-  });
-  const [{ data, fetching }] = usePostsQuery({
+  const { data, loading, fetchMore, variables } = useApprovedPostsQuery({
     variables: {
-      limit: variables.limit,
-      cursor: variables.cursor,
+      limit: 15,
+      cursor: null,
     },
   });
+  const { data: meData, loading: MeLoading } = useMeQuery({
+    skip: isServer(),
+  });
 
-  if (!fetching && !data) {
+  if (!loading && !data) {
     return <div>There are no posts.</div>;
   }
 
@@ -38,28 +37,36 @@ const Index: React.FC<IndexProps> = ({}) => {
       <Navbar />
       <Wrapper>
         <Flex mb={10} mt={10}>
-          <Heading>LiReddit</Heading>
-          <NextLink href="/create-post">
-            <Link ml={'auto'}>Create Post</Link>
-          </NextLink>
+          <Heading>Kec Thoughts</Heading>
+          {meData
+            ? meData?.me && (
+                <NextLink href="/create-post">
+                  <Link ml={'auto'}>Create Post</Link>
+                </NextLink>
+              )
+            : null}
         </Flex>
         <Stack spacing={8}>
           {data &&
-            data.posts.posts.map((post) => (
+            data.approvedPosts.posts.map((post) => (
               <Box key={post.id} p={5} shadow="md" borderWidth={'1px'}>
                 <Heading fontSize={'xl'}>{post.title}</Heading>
                 <Text mt={4}>{post.textSnippet}</Text>
               </Box>
             ))}
         </Stack>
-        {data && data.posts.hasMore ? (
+        {data && data.approvedPosts.hasMore ? (
           <Flex>
             <Button
               onClick={() =>
-                setVariables({
-                  limit: variables.limit,
-                  cursor:
-                    data.posts.posts[data.posts.posts.length - 1].createdAt,
+                fetchMore({
+                  variables: {
+                    limit: variables!.limit,
+                    cursor:
+                      data.approvedPosts.posts[
+                        data.approvedPosts.posts.length - 1
+                      ].createdAt,
+                  },
                 })
               }
               m={'auto'}
@@ -73,4 +80,4 @@ const Index: React.FC<IndexProps> = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient, { ssr: true })(Index);
+export default withApollo({ ssr: true })(Index);
