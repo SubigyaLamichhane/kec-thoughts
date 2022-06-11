@@ -31,7 +31,7 @@ const Login: React.FC<LoginProps> = ({}) => {
               });
             },
           });
-          if (errors) {
+          if (!data.login.user) {
             alert('An error occured!!!');
           } else {
             //worked

@@ -42,9 +42,10 @@ const main = async () => {
   });
 
   //applies cors is all routes
+  app.set('trust proxy', 1);
   app.use(
     cors({
-      origin: 'https://kec-thoughts-frontend.herokuapp.com',
+      origin: process.env.CORS_ORIGIN,
       credentials: true,
     })
   );
@@ -59,8 +60,8 @@ const main = async () => {
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 30, // 1 month
         httpOnly: true,
-        sameSite: 'lax', //csrf
         secure: __prod__, //cookie only works in https
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // must be 'none' to enable cross-site delivery
       },
       saveUninitialized: false,
       secret: 'avneoanveoanveanveoanevoa',

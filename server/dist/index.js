@@ -28,8 +28,9 @@ const main = async () => {
         username: 'default',
         password: '8BtwGIgWBN1LbhnpEqWT0Q139sOZOp2L',
     });
+    app.set('trust proxy', 1);
     app.use((0, cors_1.default)({
-        origin: 'https://kec-thoughts-frontend.herokuapp.com',
+        origin: process.env.CORS_ORIGIN,
         credentials: true,
     }));
     app.use((0, express_session_1.default)({
@@ -41,8 +42,8 @@ const main = async () => {
         cookie: {
             maxAge: 1000 * 60 * 60 * 24 * 30,
             httpOnly: true,
-            sameSite: 'lax',
             secure: constants_1.__prod__,
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         },
         saveUninitialized: false,
         secret: 'avneoanveoanveanveoanevoa',
